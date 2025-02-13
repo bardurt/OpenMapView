@@ -11,10 +11,9 @@ interface OmvMap {
     fun moveCamera(position: GeoPosition, zoom: Double)
     fun addMarker(marker: OmvMarker)
     fun setMapType(type: MapType)
-    fun getMapAsync(callback: OnSignalMapReadyCallback)
+    fun getMapAsync(callback: OnMapReadyCallback)
     fun setBuildingsEnabled(enabled: Boolean)
     fun snapShot(callback: SnapshotReadyCallback)
-    fun setOnMapLoadedCallback(callback: OnMapLoadedCallback)
     fun setOnCameraMoveStartedListener(listener: OnCameraMoveStartedListener)
     fun setOnCameraIdleListener(listener: OnCameraIdleListener)
     fun show()
@@ -27,16 +26,12 @@ interface OmvMap {
         SATELLITE
     }
 
-    interface OnSignalMapReadyCallback {
-        fun onSignalMapReady(map: OmvMap)
+    interface OnMapReadyCallback {
+        fun onMapReady()
     }
 
     interface SnapshotReadyCallback {
         fun onSnapshotReady(var1: Bitmap?)
-    }
-
-    interface OnMapLoadedCallback {
-        fun onMapLoaded()
     }
 
     interface OnCameraMoveStartedListener {

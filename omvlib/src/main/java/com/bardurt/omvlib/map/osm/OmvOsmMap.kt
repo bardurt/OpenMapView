@@ -53,7 +53,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
 
     init {
-        inflate(context, R.layout.layout_omv_map_view, this)
+        inflate(context, R.layout.layout_omv_osm_map_view, this)
         mapView = findViewById(R.id.osm_map_view)
         myLocationButton = findViewById(R.id.buttonMyLocation)
         myLocationButton.visibility = GONE
@@ -116,8 +116,8 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         mapView.setTileSource(tileSource)
     }
 
-    override fun getMapAsync(callback: OmvMap.OnSignalMapReadyCallback) {
-        callback.onSignalMapReady(this)
+    override fun getMapAsync(callback: OmvMap.OnMapReadyCallback) {
+        callback.onMapReady()
     }
 
     override fun setBuildingsEnabled(enabled: Boolean) {
@@ -127,10 +127,6 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     override fun snapShot(callback: OmvMap.SnapshotReadyCallback) {
         val bitmap = mapView.drawToBitmap()
         callback.onSnapshotReady(bitmap)
-    }
-
-    override fun setOnMapLoadedCallback(callback: OmvMap.OnMapLoadedCallback) {
-        callback.onMapLoaded()
     }
 
     override fun setOnCameraMoveStartedListener(listener: OmvMap.OnCameraMoveStartedListener) {

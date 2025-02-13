@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OpenMapView"
         tools:targetApi="31">
+
         <activity
             android:name=".MapActivity"
             android:exported="true">

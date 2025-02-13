@@ -4,13 +4,15 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.view.animation.OvershootInterpolator
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bardurt.omvlib.map.core.GeoPosition
+import com.bardurt.omvlib.map.core.MapProvider
 import com.bardurt.omvlib.map.core.OmvMap
-import com.bardurt.omvlib.map.osm.OmvOsmMap
+import com.bardurt.omvlib.map.core.OmvMapView
 
 
 class MapActivity : AppCompatActivity() {
@@ -20,7 +22,8 @@ class MapActivity : AppCompatActivity() {
         val OVERSHOOT_INTERPOLATOR: OvershootInterpolator = OvershootInterpolator()
     }
 
-    private lateinit var map: OmvOsmMap
+    private lateinit var map: OmvMapView
+    private lateinit var markerImage: View
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -29,7 +32,7 @@ class MapActivity : AppCompatActivity() {
             val coarseLocationGranted =
                 result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             if (fineLocationGranted || coarseLocationGranted) {
-                map.setMyLocationEnabled(true)
+                map.getMap().setMyLocationEnabled(true)
             } else {
                 Toast.makeText(this, "Permission to location denied", Toast.LENGTH_LONG).show()
             }
@@ -40,43 +43,10 @@ class MapActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_map)
 
-        val markerImage = findViewById<View>(R.id.marker_image_view)
+        markerImage = findViewById(R.id.marker_image_view)
         map = findViewById(R.id.map_view)
-        map.moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
-        map.setOnCameraMoveStartedListener(
-            object : OmvMap.OnCameraMoveStartedListener {
-                override fun onCameraMoveStarted() {
-                    markerImage.animate()
-                        .translationY(-75f)
-                        .setInterpolator(OVERSHOOT_INTERPOLATOR)
-                        .setDuration(ANIMATION_DURATION.toLong())
-                        .start()
-                }
+        setUpMapView()
 
-            }
-        )
-
-        map.setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
-            override fun onCameraIdle() {
-                markerImage.animate()
-                    .translationY(0f)
-                    .setInterpolator(OVERSHOOT_INTERPOLATOR)
-                    .setDuration(ANIMATION_DURATION.toLong())
-                    .start()
-
-            }
-        })
-
-        if (checkLocationPermission()) {
-            map.setMyLocationEnabled(true)
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
     }
 
     private fun checkLocationPermission(): Boolean {
@@ -88,5 +58,49 @@ class MapActivity : AppCompatActivity() {
                     this,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun setUpMapView() {
+        map.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
+            override fun onMapReady() {
+                map.getMap().moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
+                map.getMap().setOnCameraMoveStartedListener(
+                    object : OmvMap.OnCameraMoveStartedListener {
+                        override fun onCameraMoveStarted() {
+                            markerImage.animate()
+                                .translationY(-75f)
+                                .setInterpolator(OVERSHOOT_INTERPOLATOR)
+                                .setDuration(ANIMATION_DURATION.toLong())
+                                .start()
+                        }
+
+                    }
+                )
+
+                map.getMap().setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
+                    override fun onCameraIdle() {
+                        markerImage.animate()
+                            .translationY(0f)
+                            .setInterpolator(OVERSHOOT_INTERPOLATOR)
+                            .setDuration(ANIMATION_DURATION.toLong())
+                            .start()
+
+                    }
+                })
+
+                if (checkLocationPermission()) {
+                    map.getMap().setMyLocationEnabled(true)
+                } else {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            }
+        })
+
+
     }
 }
