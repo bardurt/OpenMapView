@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">OpenMapView</string>
+    <string name="osm_attribute">© OpenStreetMap</string>
+</resources>
