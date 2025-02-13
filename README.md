@@ -19,4 +19,4 @@ This project is a work in progress, and contributions or feedback are welcome!
 
 ### Preview
 
-![preview_1.gif](preview%2Fpreview_1.gif)
+![preview_1.gif](preview/preview_1.gif)
