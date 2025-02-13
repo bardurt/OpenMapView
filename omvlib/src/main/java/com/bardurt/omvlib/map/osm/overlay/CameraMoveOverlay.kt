@@ -1,4 +1,4 @@
-package com.bardurt.openmapview.map.osm;
+package com.bardurt.omvlib.map.osm.overlay;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -7,18 +7,23 @@ import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
+import kotlin.math.abs
 
-class OnMoveOverlay(
+class CameraMoveOverlay(
     private val onMapMoveListener: OnMapMoveListener,
     private val mapView: MapView
 ) : Overlay() {
 
+    companion object {
+        private const val MOVE_THRESHOLD = 10
+        private const val STOP_DELAY = 300L
+        private const val CHECK_INTERVAL = 50L
+    }
+
+
     private var isMapMoving: Boolean = false
     private var lastLatLon: IGeoPoint = GeoPoint(0.0, 0.0)
     private val handler = Handler(Looper.getMainLooper())
-    private val checkInterval: Long = 50
-    private val stopDelay: Long = 300
-    private val movementThreshold: Int = 10
     private var startX: Float = 0f
     private var startY: Float = 0f
 
@@ -28,11 +33,11 @@ class OnMoveOverlay(
             if (currLatLon != null && currLatLon == lastLatLon) {
                 if (isMapMoving) {
                     isMapMoving = false
-                    onMapMoveListener.mapMovingFinishedEvent()
+                    onMapMoveListener.onMapMoveFinished()
                 }
             } else {
                 lastLatLon = currLatLon
-                handler.postDelayed(this, checkInterval)
+                handler.postDelayed(this, CHECK_INTERVAL)
             }
         }
     }
@@ -46,24 +51,24 @@ class OnMoveOverlay(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                val deltaX = Math.abs(event.x - startX)
-                val deltaY = Math.abs(event.y - startY)
-                if (!isMapMoving && (deltaX > movementThreshold || deltaY > movementThreshold)) {
+                val deltaX = abs(event.x - startX)
+                val deltaY = abs(event.y - startY)
+                if (!isMapMoving && (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD)) {
                     isMapMoving = true
-                    onMapMoveListener.mapMoveStartedEvent()
-                    handler.postDelayed(checkMovementRunnable, checkInterval)
+                    onMapMoveListener.onMapMoveStarted()
+                    handler.postDelayed(checkMovementRunnable, CHECK_INTERVAL)
                 }
             }
 
             MotionEvent.ACTION_UP -> {
-                handler.postDelayed(checkMovementRunnable, stopDelay)
+                handler.postDelayed(checkMovementRunnable, STOP_DELAY)
             }
         }
         return false
     }
 
     interface OnMapMoveListener {
-        fun mapMovingFinishedEvent()
-        fun mapMoveStartedEvent()
+        fun onMapMoveFinished()
+        fun onMapMoveStarted()
     }
 }

@@ -1,12 +1,17 @@
 package com.bardurt.openmapview
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.view.animation.OvershootInterpolator
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.bardurt.openmapview.map.core.GeoPosition
-import com.bardurt.openmapview.map.core.OmvMap
-import com.bardurt.openmapview.map.osm.OmvOsmMap
+import androidx.core.content.ContextCompat
+import com.bardurt.omvlib.map.core.GeoPosition
+import com.bardurt.omvlib.map.core.OmvMap
+import com.bardurt.omvlib.map.osm.OmvOsmMap
+
 
 class MapActivity : AppCompatActivity() {
 
@@ -15,13 +20,28 @@ class MapActivity : AppCompatActivity() {
         val OVERSHOOT_INTERPOLATOR: OvershootInterpolator = OvershootInterpolator()
     }
 
+    private lateinit var map: OmvOsmMap
+
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            val fineLocationGranted =
+                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            val coarseLocationGranted =
+                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            if (fineLocationGranted || coarseLocationGranted) {
+                map.setMyLocationEnabled(true)
+            } else {
+                Toast.makeText(this, "Permission to location denied", Toast.LENGTH_LONG).show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_map)
 
         val markerImage = findViewById<View>(R.id.marker_image_view)
-        val map: OmvOsmMap = findViewById(R.id.map_view)
+        map = findViewById(R.id.map_view)
         map.moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
         map.setOnCameraMoveStartedListener(
             object : OmvMap.OnCameraMoveStartedListener {
@@ -46,5 +66,27 @@ class MapActivity : AppCompatActivity() {
 
             }
         })
+
+        if (checkLocationPermission()) {
+            map.setMyLocationEnabled(true)
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun checkLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
     }
 }

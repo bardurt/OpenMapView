@@ -1,4 +1,4 @@
-package com.bardurt.openmapview.map.core
+package com.bardurt.omvlib.map.core
 
 data class OmvMarker(
     val position: GeoPosition

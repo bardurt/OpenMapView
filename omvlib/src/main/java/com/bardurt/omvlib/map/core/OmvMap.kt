@@ -1,4 +1,4 @@
-package com.bardurt.openmapview.map.core
+package com.bardurt.omvlib.map.core
 
 import android.graphics.Bitmap
 
@@ -20,9 +20,11 @@ interface OmvMap {
     fun show()
     fun hide()
     fun getCenter(): GeoPosition
+    fun setMyLocationEnabled(enabled: Boolean)
 
     enum class MapType {
-        NORMAL
+        NORMAL,
+        SATELLITE
     }
 
     interface OnSignalMapReadyCallback {

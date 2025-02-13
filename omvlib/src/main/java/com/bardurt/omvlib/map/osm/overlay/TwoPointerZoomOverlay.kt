@@ -1,4 +1,4 @@
-package com.bardurt.openmapview.map.osm
+package com.bardurt.omvlib.map.osm.overlay
 
 import android.view.MotionEvent
 import org.osmdroid.views.MapView
