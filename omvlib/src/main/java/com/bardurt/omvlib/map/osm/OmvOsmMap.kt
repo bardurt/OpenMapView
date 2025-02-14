@@ -182,12 +182,19 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         cameraMoveStartedListener?.onCameraMoveStarted()
     }
 
-    override fun onMove(movement: Int) {
-        if (movement > 0) {
-            controller.zoomIn()
-        } else {
-            controller.zoomOut()
+    override fun onDoubleTapAndMove(movementPercentage: Double) {
+        val current = mapView.zoomLevelDouble
+        var zoomLevel = current + movementPercentage
+
+        if (zoomLevel > mapView.maxZoomLevel) {
+            zoomLevel = mapView.maxZoomLevel
         }
+
+        if (zoomLevel < mapView.minZoomLevel) {
+            zoomLevel = mapView.minZoomLevel
+        }
+
+        controller.setZoom(zoomLevel)
     }
 
     override fun onZoom(movement: Int) {

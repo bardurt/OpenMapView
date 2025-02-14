@@ -1,6 +1,7 @@
 package com.bardurt.omvlib.map.osm.overlay
 
 
+import android.graphics.Canvas
 import android.os.SystemClock
 import android.view.MotionEvent
 
@@ -11,13 +12,21 @@ import kotlin.math.abs
 class DoubleTapAndMoveOverlay(private val listener: Listener) : Overlay() {
 
     companion object {
-        private const val DOUBLE_TAP_THRESHOLD = 300
-        private const val MOVE_THRESHOLD = 20
+        private const val DOUBLE_TAP_THRESHOLD = 200
+        private const val MOVE_THRESHOLD = 100
     }
 
     private var lastTapTime: Long = 0
     private var isDoubleTap = false
     private var startY: Float = 0f
+    private var height: Double = 0.0
+
+    override fun draw(pCanvas: Canvas?, pMapView: MapView?, pShadow: Boolean) {
+        super.draw(pCanvas, pMapView, pShadow)
+        pCanvas?.let {
+            height = it.height.toDouble()
+        }
+    }
 
     override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
         when (event.action) {
@@ -35,10 +44,10 @@ class DoubleTapAndMoveOverlay(private val listener: Listener) : Overlay() {
                 if (isDoubleTap) {
                     val movement = (event.y - startY).toInt()
                     if (abs(movement) > MOVE_THRESHOLD) {
-                        listener.onMove(movement)
-                        isDoubleTap = false
-                        return true
+                        val percentage = movement / height
+                        listener.onDoubleTapAndMove(percentage)
                     }
+                    return true
                 }
             }
 
@@ -51,6 +60,6 @@ class DoubleTapAndMoveOverlay(private val listener: Listener) : Overlay() {
     }
 
     interface Listener {
-        fun onMove(movement: Int)
+        fun onDoubleTapAndMove(movementPercentage: Double)
     }
 }
