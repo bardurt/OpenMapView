@@ -3,6 +3,7 @@ package com.bardurt.omvlib.map.osm
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.LocationManager
 import android.util.AttributeSet
 import android.util.Log
@@ -11,19 +12,19 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.drawToBitmap
 import com.bardurt.omvlib.R
+import com.bardurt.omvlib.map.core.GeoPosition
+import com.bardurt.omvlib.map.core.OmvMap
+import com.bardurt.omvlib.map.core.OmvMarker
+import com.bardurt.omvlib.map.osm.overlay.CameraMoveOverlay
+import com.bardurt.omvlib.map.osm.overlay.DoubleTapAndMoveOverlay
+import com.bardurt.omvlib.map.osm.overlay.TwoPointerZoomOverlay
 import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import com.bardurt.omvlib.map.core.GeoPosition
-import com.bardurt.omvlib.map.core.OmvMap
-import com.bardurt.omvlib.map.core.OmvMarker
-import com.bardurt.omvlib.map.osm.overlay.DoubleTapAndMoveOverlay
-import com.bardurt.omvlib.map.osm.overlay.CameraMoveOverlay
-import com.bardurt.omvlib.map.osm.overlay.TwoPointerZoomOverlay
-import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -40,8 +41,9 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     private var myLocationButton: View
+    private var layerButton: View
     private var mapView: MapView
-    private var controller: IMapController;
+    private var controller: IMapController
     private var cameraMoveStartedListener: OmvMap.OnCameraMoveStartedListener? = null
     private var moveOverlay: CameraMoveOverlay
     private var idleListener: OmvMap.OnCameraIdleListener? = null
@@ -50,6 +52,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     private var twoPointerZoomOverlay: TwoPointerZoomOverlay
     private var myLocationOverlay: MyLocationNewOverlay
     private var locationProvider: IMyLocationProvider
+    private var mapType = OmvMap.MapType.NORMAL
 
 
     init {
@@ -58,6 +61,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         myLocationButton = findViewById(R.id.buttonMyLocation)
         myLocationButton.visibility = GONE
         myLocationButton.setOnClickListener { moveToMyLocation() }
+        layerButton = findViewById(R.id.buttonLayers)
 
         mapView.setTileSource(TileSourceFactory.MAPNIK)
         Configuration.getInstance().load(
@@ -77,9 +81,15 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         mapView.overlays.add(twoPointerZoomOverlay)
 
         locationProvider = GpsMyLocationProvider(context)
-        (locationProvider as GpsMyLocationProvider).addLocationSource(LocationManager.NETWORK_PROVIDER);
+        (locationProvider as GpsMyLocationProvider).addLocationSource(LocationManager.NETWORK_PROVIDER)
         myLocationOverlay = MyLocationNewOverlay(locationProvider, mapView)
         myLocationOverlay.enableMyLocation(locationProvider)
+
+        val myLocationIcon =
+            BitmapFactory.decodeResource(context.resources, R.drawable.img_my_location)
+        myLocationOverlay.setPersonIcon(myLocationIcon)
+        myLocationOverlay.setDirectionIcon(myLocationIcon)
+        myLocationOverlay.setPersonAnchor(0.5F, 0.5F)
     }
 
     override fun resume() {
@@ -108,12 +118,17 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun setMapType(type: OmvMap.MapType) {
+        mapType = type
         val tileSource = when (type) {
             OmvMap.MapType.NORMAL -> TileSourceFactory.MAPNIK
             OmvMap.MapType.SATELLITE -> TileSourceFactory.USGS_SAT
         }
 
         mapView.setTileSource(tileSource)
+    }
+
+    override fun getMapType(): OmvMap.MapType {
+        return mapType
     }
 
     override fun getMapAsync(callback: OmvMap.OnMapReadyCallback) {
@@ -174,6 +189,14 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         }
     }
 
+    override fun showLayerOptions(visible: Boolean) {
+        if (visible) {
+            layerButton.visibility = VISIBLE
+        } else {
+            layerButton.visibility = GONE
+        }
+    }
+
     override fun onMapMoveFinished() {
         idleListener?.onCameraIdle()
     }
@@ -184,15 +207,10 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
     override fun onDoubleTapAndMove(movementPercentage: Double) {
         val current = mapView.zoomLevelDouble
-        var zoomLevel = current + movementPercentage
-
-        if (zoomLevel > mapView.maxZoomLevel) {
-            zoomLevel = mapView.maxZoomLevel
-        }
-
-        if (zoomLevel < mapView.minZoomLevel) {
-            zoomLevel = mapView.minZoomLevel
-        }
+        val scaleFactor = 0.15
+        val scaledMovement = movementPercentage * (scaleFactor * current)
+        var zoomLevel = current + scaledMovement
+        zoomLevel = zoomLevel.coerceIn(mapView.minZoomLevel, mapView.maxZoomLevel)
 
         controller.setZoom(zoomLevel)
     }

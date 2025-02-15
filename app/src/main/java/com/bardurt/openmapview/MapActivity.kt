@@ -1,18 +1,26 @@
 package com.bardurt.openmapview
 
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bardurt.omvlib.map.core.GeoPosition
-import com.bardurt.omvlib.map.core.MapProvider
 import com.bardurt.omvlib.map.core.OmvMap
 import com.bardurt.omvlib.map.core.OmvMapView
+import java.util.Locale
 
 
 class MapActivity : AppCompatActivity() {
@@ -22,8 +30,13 @@ class MapActivity : AppCompatActivity() {
         val OVERSHOOT_INTERPOLATOR: OvershootInterpolator = OvershootInterpolator()
     }
 
-    private lateinit var map: OmvMapView
+    private lateinit var mapView: OmvMapView
     private lateinit var markerImage: View
+    private lateinit var geocoder: Geocoder
+    private lateinit var addressView: TextView
+    private val handler = Handler(Looper.getMainLooper())
+    private var addressLookupThread: AddressLookupThread? = null
+    private var locationEnabled: Boolean = false;
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -32,7 +45,9 @@ class MapActivity : AppCompatActivity() {
             val coarseLocationGranted =
                 result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             if (fineLocationGranted || coarseLocationGranted) {
-                map.getMap().setMyLocationEnabled(true)
+                if (locationEnabled) {
+                    mapView.getMap().setMyLocationEnabled(true)
+                }
             } else {
                 Toast.makeText(this, "Permission to location denied", Toast.LENGTH_LONG).show()
             }
@@ -42,9 +57,12 @@ class MapActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_map)
+        locationEnabled = isLocationEnabled(this)
 
         markerImage = findViewById(R.id.marker_image_view)
-        map = findViewById(R.id.map_view)
+        mapView = findViewById(R.id.map_view)
+        addressView = findViewById(R.id.tv_address)
+        geocoder = Geocoder(this, Locale.getDefault())
         setUpMapView()
 
     }
@@ -61,10 +79,12 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun setUpMapView() {
-        map.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
+        mapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
             override fun onMapReady() {
-                map.getMap().moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
-                map.getMap().setOnCameraMoveStartedListener(
+                mapView.getMap().showLayerOptions(false)
+                mapView.getMap()
+                    .moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
+                mapView.getMap().setOnCameraMoveStartedListener(
                     object : OmvMap.OnCameraMoveStartedListener {
                         override fun onCameraMoveStarted() {
                             markerImage.animate()
@@ -77,7 +97,7 @@ class MapActivity : AppCompatActivity() {
                     }
                 )
 
-                map.getMap().setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
+                mapView.getMap().setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
                     override fun onCameraIdle() {
                         markerImage.animate()
                             .translationY(0f)
@@ -85,11 +105,26 @@ class MapActivity : AppCompatActivity() {
                             .setDuration(ANIMATION_DURATION.toLong())
                             .start()
 
+                        if (addressLookupThread != null) {
+                            addressLookupThread?.interrupt()
+                            addressLookupThread = null
+                        }
+
+                        addressLookupThread = AddressLookupThread(
+                            mainThread = handler,
+                            geocoder = geocoder,
+                            textView = addressView,
+                            latitude = mapView.getMap().getCenter().latitude,
+                            longitude = mapView.getMap().getCenter().longitude
+                        )
+                        addressLookupThread!!.start()
                     }
                 })
 
                 if (checkLocationPermission()) {
-                    map.getMap().setMyLocationEnabled(true)
+                    if (locationEnabled) {
+                        mapView.getMap().setMyLocationEnabled(true)
+                    }
                 } else {
                     locationPermissionLauncher.launch(
                         arrayOf(
@@ -100,7 +135,64 @@ class MapActivity : AppCompatActivity() {
                 }
             }
         })
+    }
 
+    private class AddressLookupThread(
+        val mainThread: Handler,
+        val geocoder: Geocoder,
+        val textView: TextView,
+        val latitude: Double,
+        val longitude: Double
+    ) : Thread() {
 
+        override fun run() {
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val addressComplete = addressToString(addresses[0])
+                val addressShort = addressToShortString(addresses[0])
+                val text = "$addressShort\n$addressComplete"
+
+                mainThread.post {
+                    textView.text = text
+                }
+            }
+        }
+
+        private fun addressToString(address: Address?): String {
+            return if (address != null) address.getAddressLine(0) else ""
+        }
+
+        private fun addressToShortString(address: Address?): String {
+            if (address == null) return ""
+
+            val addressLine = address.getAddressLine(0)
+            val split =
+                addressLine.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+            return if (split.size >= 3) {
+                split[1].trim { it <= ' ' } + ", " + split[2].trim { it <= ' ' }
+            } else if (split.size == 2) {
+                split[1].trim { it <= ' ' }
+            } else split[0].trim { it <= ' ' }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        addressLookupThread?.interrupt()
+    }
+
+    @Suppress("deprecation")
+    fun isLocationEnabled(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val lm = context.getSystemService(LOCATION_SERVICE) as LocationManager
+            return lm.isLocationEnabled
+        } else {
+            val mode: Int = Settings.Secure.getInt(
+                context.contentResolver, Settings.Secure.LOCATION_MODE,
+                Settings.Secure.LOCATION_MODE_OFF
+            )
+            return (mode != Settings.Secure.LOCATION_MODE_OFF)
+        }
     }
 }

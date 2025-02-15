@@ -11,6 +11,7 @@ interface OmvMap {
     fun moveCamera(position: GeoPosition, zoom: Double)
     fun addMarker(marker: OmvMarker)
     fun setMapType(type: MapType)
+    fun getMapType() : MapType
     fun getMapAsync(callback: OnMapReadyCallback)
     fun setBuildingsEnabled(enabled: Boolean)
     fun snapShot(callback: SnapshotReadyCallback)
@@ -20,6 +21,7 @@ interface OmvMap {
     fun hide()
     fun getCenter(): GeoPosition
     fun setMyLocationEnabled(enabled: Boolean)
+    fun showLayerOptions(visible : Boolean)
 
     enum class MapType {
         NORMAL,
@@ -31,7 +33,7 @@ interface OmvMap {
     }
 
     interface SnapshotReadyCallback {
-        fun onSnapshotReady(var1: Bitmap?)
+        fun onSnapshotReady(bitmap: Bitmap)
     }
 
     interface OnCameraMoveStartedListener {

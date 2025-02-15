@@ -20,11 +20,17 @@ class DoubleTapAndMoveOverlay(private val listener: Listener) : Overlay() {
     private var isDoubleTap = false
     private var startY: Float = 0f
     private var height: Double = 0.0
+    private var heightSet = false
+
 
     override fun draw(pCanvas: Canvas?, pMapView: MapView?, pShadow: Boolean) {
         super.draw(pCanvas, pMapView, pShadow)
-        pCanvas?.let {
-            height = it.height.toDouble()
+
+        if (!heightSet) {
+            pCanvas?.let {
+                height = it.height.toDouble()
+                heightSet = true
+            }
         }
     }
 

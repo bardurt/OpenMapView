@@ -20,7 +20,6 @@ class CameraMoveOverlay(
         private const val CHECK_INTERVAL = 50L
     }
 
-
     private var isMapMoving: Boolean = false
     private var lastLatLon: IGeoPoint = GeoPoint(0.0, 0.0)
     private val handler = Handler(Looper.getMainLooper())

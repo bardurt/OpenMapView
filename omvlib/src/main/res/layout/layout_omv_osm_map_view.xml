@@ -14,6 +14,7 @@
         android:background="@color/white_alpha_75"
         android:paddingHorizontal="@dimen/padding_large"
         android:paddingVertical="@dimen/padding_small"
+        android:layout_marginEnd="@dimen/padding_small"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -30,16 +31,38 @@
         android:id="@+id/buttonMyLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/white_alpha_75"
+        android:background="@drawable/rounded_rectangle_with_shadow"
         android:gravity="center"
         android:padding="@dimen/padding_small"
+        android:layout_marginEnd="@dimen/padding_larger"
+        android:layout_marginBottom="@dimen/padding_largest"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_my_location" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/buttonLayers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_rectangle_with_shadow"
+        android:gravity="center"
+        android:padding="@dimen/padding_small"
+        android:layout_marginEnd="@dimen/padding_larger"
+        android:layout_marginTop="@dimen/padding_largest"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_layers" />
 
     </LinearLayout>
 
