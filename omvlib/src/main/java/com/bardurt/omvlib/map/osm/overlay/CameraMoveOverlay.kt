@@ -1,4 +1,4 @@
-package com.bardurt.omvlib.map.osm.overlay;
+package com.bardurt.omvlib.map.osm.overlay
 
 import android.os.Handler
 import android.os.Looper
