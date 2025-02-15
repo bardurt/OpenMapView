@@ -1,12 +1,12 @@
 package com.bardurt.omvlib.map.osm.overlay;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.view.MotionEvent;
-import org.osmdroid.api.IGeoPoint;
-import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.Overlay;
+import android.os.Handler
+import android.os.Looper
+import android.view.MotionEvent
+import org.osmdroid.api.IGeoPoint
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Overlay
 import kotlin.math.abs
 
 class CameraMoveOverlay(

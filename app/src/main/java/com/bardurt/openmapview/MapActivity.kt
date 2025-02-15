@@ -36,7 +36,7 @@ class MapActivity : AppCompatActivity() {
     private lateinit var addressView: TextView
     private val handler = Handler(Looper.getMainLooper())
     private var addressLookupThread: AddressLookupThread? = null
-    private var locationEnabled: Boolean = false;
+    private var locationEnabled: Boolean = false
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
