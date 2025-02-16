@@ -21,6 +21,7 @@ import com.bardurt.omvlib.map.core.GeoPosition
 import com.bardurt.omvlib.map.core.OmvMap
 import com.bardurt.omvlib.map.core.OmvMapView
 import java.util.Locale
+import java.util.concurrent.Executors
 
 
 class MapActivity : AppCompatActivity() {
@@ -35,8 +36,9 @@ class MapActivity : AppCompatActivity() {
     private lateinit var geocoder: Geocoder
     private lateinit var addressView: TextView
     private val handler = Handler(Looper.getMainLooper())
-    private var addressLookupThread: AddressLookupThread? = null
     private var locationEnabled: Boolean = false
+
+    private val executor = Executors.newSingleThreadExecutor()
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -49,7 +51,10 @@ class MapActivity : AppCompatActivity() {
                     mapView.getMap().setMyLocationEnabled(true)
                 }
             } else {
-                Toast.makeText(this, "Permission to location denied", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    getString(R.string.permission_to_location_denied), Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -83,7 +88,7 @@ class MapActivity : AppCompatActivity() {
             override fun onMapReady() {
                 mapView.getMap().showLayerOptions(false)
                 mapView.getMap()
-                    .moveCamera(GeoPosition(-12.080235951074854, -77.04036706431548), 13.0)
+                    .moveCamera(GeoPosition(37.386969927816004, -121.8824158705871), 13.0)
                 mapView.getMap().setOnCameraMoveStartedListener(
                     object : OmvMap.OnCameraMoveStartedListener {
                         override fun onCameraMoveStarted() {
@@ -105,19 +110,15 @@ class MapActivity : AppCompatActivity() {
                             .setDuration(ANIMATION_DURATION.toLong())
                             .start()
 
-                        if (addressLookupThread != null) {
-                            addressLookupThread?.interrupt()
-                            addressLookupThread = null
-                        }
-
-                        addressLookupThread = AddressLookupThread(
-                            mainThread = handler,
-                            geocoder = geocoder,
-                            textView = addressView,
-                            latitude = mapView.getMap().getCenter().latitude,
-                            longitude = mapView.getMap().getCenter().longitude
+                        executor.submit(
+                            AddressLookupTask(
+                                mainThread = handler,
+                                geocoder = geocoder,
+                                textView = addressView,
+                                latitude = mapView.getMap().getCenter().latitude,
+                                longitude = mapView.getMap().getCenter().longitude
+                            )
                         )
-                        addressLookupThread!!.start()
                     }
                 })
 
@@ -137,13 +138,14 @@ class MapActivity : AppCompatActivity() {
         })
     }
 
-    private class AddressLookupThread(
+    @Suppress("deprecation")
+    private class AddressLookupTask(
         val mainThread: Handler,
         val geocoder: Geocoder,
         val textView: TextView,
         val latitude: Double,
         val longitude: Double
-    ) : Thread() {
+    ) : Runnable {
 
         override fun run() {
             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
@@ -177,13 +179,8 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        addressLookupThread?.interrupt()
-    }
-
     @Suppress("deprecation")
-    fun isLocationEnabled(context: Context): Boolean {
+    private fun isLocationEnabled(context: Context): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val lm = context.getSystemService(LOCATION_SERVICE) as LocationManager
             return lm.isLocationEnabled

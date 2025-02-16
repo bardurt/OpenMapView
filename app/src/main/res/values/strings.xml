@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">OpenMapView</string>
     <string name="osm_attribute">© OpenStreetMap</string>
+    <string name="permission_to_location_denied">Permission to location denied</string>
 </resources>
