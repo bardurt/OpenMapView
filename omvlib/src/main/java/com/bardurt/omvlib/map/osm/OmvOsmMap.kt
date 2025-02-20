@@ -3,14 +3,16 @@ package com.bardurt.omvlib.map.osm
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.location.LocationManager
+import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.drawToBitmap
 import com.bardurt.omvlib.R
 import com.bardurt.omvlib.map.core.GeoPosition
 import com.bardurt.omvlib.map.core.OmvMap
@@ -147,7 +149,15 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun snapShot(callback: OmvMap.SnapshotReadyCallback) {
-        val bitmap = mapView.drawToBitmap()
+        val bitmap = if (mapView.width < 1) {
+            drawToBitmap(mapView, 512, 512)
+        } else {
+            drawToBitmap(mapView, mapView.width, mapView.height)
+        }
+
+        if (bitmap == null) {
+            throw IllegalStateException("Unable to draw bitmap")
+        }
         callback.onSnapshotReady(bitmap)
     }
 
@@ -231,5 +241,62 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
     private fun moveToMyLocation() {
         controller.animateTo(myLocationOverlay.myLocation)
+    }
+
+    private fun createBitmapFromLayout(view: View): Bitmap {
+        val spec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        view.measure(spec, spec)
+        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+        val b = Bitmap.createBitmap(
+            view.measuredWidth, view.measuredWidth,
+            Bitmap.Config.ARGB_8888
+        )
+        val c = Canvas(b)
+        c.translate((-view.scrollX).toFloat(), (-view.scrollY).toFloat())
+        view.draw(c)
+        return b
+    }
+
+    @Suppress("Deprecation")
+    private fun drawToBitmap(viewToDrawFrom: View, width: Int, height: Int): Bitmap? {
+        var newWidth = width
+        var newHeight = height
+        val wasDrawingCacheEnabled = viewToDrawFrom.isDrawingCacheEnabled
+        if (!wasDrawingCacheEnabled) viewToDrawFrom.isDrawingCacheEnabled = true
+        if (newWidth <= 0 || newHeight <= 0) {
+            if (viewToDrawFrom.width <= 0 || viewToDrawFrom.height <= 0) {
+                viewToDrawFrom.measure(
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+                )
+                newWidth = viewToDrawFrom.measuredWidth
+                newHeight = viewToDrawFrom.measuredHeight
+            }
+            if (newWidth <= 0 || newHeight <= 0) {
+                val bmp = viewToDrawFrom.drawingCache
+                val result = if (bmp == null) null else Bitmap.createBitmap(bmp)
+                if (!wasDrawingCacheEnabled) viewToDrawFrom.isDrawingCacheEnabled = false
+                return result
+            }
+            viewToDrawFrom.layout(0, 0, width, height)
+        } else {
+            viewToDrawFrom.measure(
+                MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            )
+            viewToDrawFrom.layout(0, 0, viewToDrawFrom.measuredWidth, viewToDrawFrom.measuredHeight)
+        }
+        val drawingCache = viewToDrawFrom.drawingCache
+        val bmp = ThumbnailUtils.extractThumbnail(drawingCache, newHeight, newHeight)
+        val result = if (bmp == null || bmp != drawingCache) {
+            bmp
+        } else {
+            Bitmap.createBitmap(bmp)
+        }
+
+        if (!wasDrawingCacheEnabled) {
+            viewToDrawFrom.isDrawingCacheEnabled = false
+        }
+        return result
     }
 }
