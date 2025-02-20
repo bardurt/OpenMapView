@@ -110,9 +110,18 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun addMarker(marker: OmvMarker) {
-        val startPoint = GeoPoint(marker.position.latitude, marker.position.longitude)
+        val geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude)
         val osmMarker = Marker(mapView)
-        osmMarker.position = startPoint
+
+        if (marker.icon != null) {
+            osmMarker.icon = marker.icon
+        }
+
+        if (marker.title.isNotEmpty()) {
+            osmMarker.title = marker.title
+        }
+
+        osmMarker.position = geoPoint
         osmMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         mapView.overlays.add(osmMarker)
     }

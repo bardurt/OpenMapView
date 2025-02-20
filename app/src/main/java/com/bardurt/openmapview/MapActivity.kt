@@ -2,6 +2,7 @@ package com.bardurt.openmapview
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.location.Address
 import android.location.Geocoder
 import android.location.LocationManager
@@ -16,10 +17,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.bardurt.omvlib.map.core.GeoPosition
 import com.bardurt.omvlib.map.core.OmvMap
 import com.bardurt.omvlib.map.core.OmvMapView
+import com.bardurt.omvlib.map.core.OmvMarker
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -35,6 +38,8 @@ class MapActivity : AppCompatActivity() {
     private lateinit var markerImage: View
     private lateinit var geocoder: Geocoder
     private lateinit var addressView: TextView
+    private lateinit var buttonSnapshot: View
+    private lateinit var buttonAddMarker: View
     private val handler = Handler(Looper.getMainLooper())
     private var locationEnabled: Boolean = false
 
@@ -68,6 +73,10 @@ class MapActivity : AppCompatActivity() {
         mapView = findViewById(R.id.map_view)
         addressView = findViewById(R.id.tv_address)
         geocoder = Geocoder(this, Locale.getDefault())
+        buttonSnapshot = findViewById(R.id.buttonSnapshot)
+        buttonSnapshot.setOnClickListener { takeSnapshot() }
+        buttonAddMarker = findViewById(R.id.buttonAddMarker)
+        buttonAddMarker.setOnClickListener { addMarker() }
         setUpMapView()
 
     }
@@ -87,8 +96,28 @@ class MapActivity : AppCompatActivity() {
         mapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
             override fun onMapReady() {
                 mapView.getMap().showLayerOptions(false)
+                mapView.getMap().addMarker(
+                    OmvMarker(
+                        position = GeoPosition(
+                            latitude = 37.386969927816004,
+                            longitude = -121.8824158705871
+                        ),
+                        icon = AppCompatResources.getDrawable(
+                            this@MapActivity,
+                            R.drawable.ic_map_marker
+                        ),
+                        title = "Test Title"
+                    )
+                )
+
                 mapView.getMap()
-                    .moveCamera(GeoPosition(37.386969927816004, -121.8824158705871), 13.0)
+                    .moveCamera(
+                        GeoPosition(
+                            latitude = 37.386969927816004,
+                            longitude = -121.8824158705871
+                        ), zoom = 13.0
+                    )
+
                 mapView.getMap().setOnCameraMoveStartedListener(
                     object : OmvMap.OnCameraMoveStartedListener {
                         override fun onCameraMoveStarted() {
@@ -177,6 +206,33 @@ class MapActivity : AppCompatActivity() {
                 split[1].trim { it <= ' ' }
             } else split[0].trim { it <= ' ' }
         }
+    }
+
+    private fun takeSnapshot() {
+        mapView.getMap().snapShot(callback = object : OmvMap.SnapshotReadyCallback {
+            override fun onSnapshotReady(bitmap: Bitmap) {
+                val fragment = SnapshotFragment.newInstance(bitmap)
+                fragment.show(this@MapActivity.supportFragmentManager, SnapshotFragment.TAG)
+            }
+        })
+
+    }
+
+    private fun addMarker() {
+        mapView.getMap().addMarker(
+            OmvMarker(
+                position = GeoPosition(
+                    latitude = mapView.getMap().getCenter().latitude,
+                    longitude = mapView.getMap().getCenter().longitude
+                ),
+                icon = AppCompatResources.getDrawable(
+                    this@MapActivity,
+                    R.drawable.ic_map_marker
+                ),
+                title = "Test Title"
+            )
+        )
+
     }
 
     @Suppress("deprecation")

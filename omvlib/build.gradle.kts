@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 21
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -49,7 +49,7 @@ afterEvaluate {
                 from (components["release"])
                 groupId = "com.github.bardurt"
                 artifactId = "OpenMapView"
-                version = "0.1.2"
+                version = "0.1.3"
             }
         }
     }
