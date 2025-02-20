@@ -243,20 +243,6 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         controller.animateTo(myLocationOverlay.myLocation)
     }
 
-    private fun createBitmapFromLayout(view: View): Bitmap {
-        val spec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        view.measure(spec, spec)
-        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
-        val b = Bitmap.createBitmap(
-            view.measuredWidth, view.measuredWidth,
-            Bitmap.Config.ARGB_8888
-        )
-        val c = Canvas(b)
-        c.translate((-view.scrollX).toFloat(), (-view.scrollY).toFloat())
-        view.draw(c)
-        return b
-    }
-
     @Suppress("Deprecation")
     private fun drawToBitmap(viewToDrawFrom: View, width: Int, height: Int): Bitmap? {
         var newWidth = width
