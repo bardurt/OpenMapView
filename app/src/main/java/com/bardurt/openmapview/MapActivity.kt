@@ -30,16 +30,21 @@ import java.util.concurrent.Executors
 class MapActivity : AppCompatActivity() {
 
     companion object {
+        private const val DEFAULT_LAT = 37.386969927816004
+        private const val DEFAULT_LON = -121.8824158705871
+        private const val DEFAULT_ZOOM = 13.0
         const val ANIMATION_DURATION: Int = 250
         val OVERSHOOT_INTERPOLATOR: OvershootInterpolator = OvershootInterpolator()
     }
 
     private lateinit var mapView: OmvMapView
+    private lateinit var miniMapView: OmvMapView
     private lateinit var markerImage: View
     private lateinit var geocoder: Geocoder
     private lateinit var addressView: TextView
     private lateinit var buttonSnapshot: View
     private lateinit var buttonAddMarker: View
+    private lateinit var buttonMiniMap: View
     private val handler = Handler(Looper.getMainLooper())
     private var locationEnabled: Boolean = false
 
@@ -70,13 +75,22 @@ class MapActivity : AppCompatActivity() {
         locationEnabled = isLocationEnabled(this)
 
         markerImage = findViewById(R.id.marker_image_view)
-        mapView = findViewById(R.id.map_view)
+        mapView = findViewById(R.id.mapView)
+        miniMapView = findViewById(R.id.mapViewMini)
         addressView = findViewById(R.id.tv_address)
         geocoder = Geocoder(this, Locale.getDefault())
         buttonSnapshot = findViewById(R.id.buttonSnapshot)
         buttonSnapshot.setOnClickListener { takeSnapshot() }
         buttonAddMarker = findViewById(R.id.buttonAddMarker)
         buttonAddMarker.setOnClickListener { addMarker() }
+        buttonMiniMap = findViewById(R.id.buttonMiniMap)
+        buttonMiniMap.setOnClickListener {
+            if (miniMapView.visibility == View.VISIBLE) {
+                miniMapView.visibility = View.GONE
+            } else {
+                miniMapView.visibility = View.VISIBLE
+            }
+        }
         setUpMapView()
 
     }
@@ -96,26 +110,13 @@ class MapActivity : AppCompatActivity() {
         mapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
             override fun onMapReady() {
                 mapView.getMap().showLayerOptions(false)
-                mapView.getMap().addMarker(
-                    OmvMarker(
-                        position = GeoPosition(
-                            latitude = 37.386969927816004,
-                            longitude = -121.8824158705871
-                        ),
-                        icon = AppCompatResources.getDrawable(
-                            this@MapActivity,
-                            R.drawable.ic_map_marker
-                        ),
-                        title = "Test Title"
-                    )
-                )
 
                 mapView.getMap()
                     .moveCamera(
                         GeoPosition(
-                            latitude = 37.386969927816004,
-                            longitude = -121.8824158705871
-                        ), zoom = 13.0
+                            latitude = DEFAULT_LAT,
+                            longitude = DEFAULT_LON
+                        ), zoom = DEFAULT_ZOOM
                     )
 
                 mapView.getMap().setOnCameraMoveStartedListener(
@@ -163,6 +164,21 @@ class MapActivity : AppCompatActivity() {
                         )
                     )
                 }
+            }
+        })
+
+        miniMapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
+            override fun onMapReady() {
+                miniMapView.getMap()
+                    .moveCamera(
+                        GeoPosition(
+                            latitude = DEFAULT_LAT,
+                            longitude = DEFAULT_LON
+                        ), zoom = DEFAULT_ZOOM
+                    )
+                miniMapView.getMap().showLayerOptions(visible = false)
+                miniMapView.getMap().setMyLocationEnabled(enabled = false)
+                miniMapView.getMap().setMapType(type = OmvMap.MapType.SATELLITE)
             }
         })
     }
@@ -231,6 +247,10 @@ class MapActivity : AppCompatActivity() {
                 ),
                 title = "Test Title"
             )
+        )
+
+        miniMapView.getMap().moveCamera(
+            position = mapView.getMap().getCenter(), zoom = DEFAULT_ZOOM
         )
 
     }

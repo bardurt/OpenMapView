@@ -9,7 +9,7 @@
     android:layout_height="match_parent">
 
     <com.bardurt.omvlib.map.core.OmvMapView
-        android:id="@+id/map_view"
+        android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -17,6 +17,15 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"/>
+
+    <com.bardurt.omvlib.map.core.OmvMapView
+        android:id="@+id/mapViewMini"
+        android:layout_width="196dp"
+        android:layout_height="196dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="@dimen/padding_largest"
         app:layout_constraintVertical_bias="0.0"/>
 
     <ImageView
@@ -95,6 +104,24 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_map_marker"
+            app:tint="@color/black" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/buttonMiniMap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/padding_large"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonAddMarker"
+        android:layout_marginTop="@dimen/padding_largest"
+        android:background="@drawable/rounded_rectangle_with_shadow">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_map"
             app:tint="@color/black" />
 
     </LinearLayout>
