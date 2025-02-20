@@ -35,4 +35,8 @@ class OmvMapView(context: Context, attrs: AttributeSet?) : LinearLayout(context,
         return omvMap
     }
 
+    override fun getMapAsync(callback: MapProvider.OnMapReadyCallback) {
+        callback.onMapReady(omvMap)
+    }
+
 }

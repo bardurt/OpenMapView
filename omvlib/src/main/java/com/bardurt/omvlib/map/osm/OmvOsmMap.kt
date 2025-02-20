@@ -115,6 +115,8 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
         if (marker.icon != null) {
             osmMarker.icon = marker.icon
+        } else {
+            osmMarker.icon = ContextCompat.getDrawable(context, R.drawable.ic_default_marker)
         }
 
         if (marker.title.isNotEmpty()) {
@@ -140,10 +142,6 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         return mapType
     }
 
-    override fun getMapAsync(callback: OmvMap.OnMapReadyCallback) {
-        callback.onMapReady()
-    }
-
     override fun setBuildingsEnabled(enabled: Boolean) {
 
     }
@@ -166,14 +164,6 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         val lon = mapView.mapCenter.longitude
 
         return GeoPosition(latitude = lat, longitude = lon)
-    }
-
-    override fun show() {
-        this.visibility = VISIBLE
-    }
-
-    override fun hide() {
-        this.visibility = GONE
     }
 
     override fun setMyLocationEnabled(enabled: Boolean) {

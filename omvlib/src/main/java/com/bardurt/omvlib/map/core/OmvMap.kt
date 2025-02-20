@@ -12,13 +12,10 @@ interface OmvMap {
     fun addMarker(marker: OmvMarker)
     fun setMapType(type: MapType)
     fun getMapType() : MapType
-    fun getMapAsync(callback: OnMapReadyCallback)
     fun setBuildingsEnabled(enabled: Boolean)
     fun snapShot(callback: SnapshotReadyCallback)
     fun setOnCameraMoveStartedListener(listener: OnCameraMoveStartedListener)
     fun setOnCameraIdleListener(listener: OnCameraIdleListener)
-    fun show()
-    fun hide()
     fun getCenter(): GeoPosition
     fun setMyLocationEnabled(enabled: Boolean)
     fun showLayerOptions(visible : Boolean)
@@ -28,9 +25,6 @@ interface OmvMap {
         SATELLITE
     }
 
-    interface OnMapReadyCallback {
-        fun onMapReady()
-    }
 
     interface SnapshotReadyCallback {
         fun onSnapshotReady(bitmap: Bitmap)

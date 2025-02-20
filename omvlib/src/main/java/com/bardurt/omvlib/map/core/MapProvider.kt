@@ -6,6 +6,12 @@ interface MapProvider {
 
     fun getMap(): OmvMap
 
+    fun getMapAsync(callback: OnMapReadyCallback)
+
+    interface OnMapReadyCallback {
+        fun onMapReady(omvMap: OmvMap)
+    }
+
     enum class Source {
         OSM
     }

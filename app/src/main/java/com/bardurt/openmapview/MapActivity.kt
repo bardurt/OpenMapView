@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.bardurt.omvlib.map.core.GeoPosition
+import com.bardurt.omvlib.map.core.MapProvider
 import com.bardurt.omvlib.map.core.OmvMap
 import com.bardurt.omvlib.map.core.OmvMapView
 import com.bardurt.omvlib.map.core.OmvMarker
@@ -39,6 +40,10 @@ class MapActivity : AppCompatActivity() {
 
     private lateinit var mapView: OmvMapView
     private lateinit var miniMapView: OmvMapView
+
+    private lateinit var mainMap: OmvMap
+    private lateinit var miniMap: OmvMap
+
     private lateinit var markerImage: View
     private lateinit var geocoder: Geocoder
     private lateinit var addressView: TextView
@@ -107,11 +112,12 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun setUpMapView() {
-        mapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
-            override fun onMapReady() {
-                mapView.getMap().showLayerOptions(false)
+        mapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
+            override fun onMapReady(omvMap: OmvMap) {
+                mainMap = omvMap
+                omvMap.showLayerOptions(false)
 
-                mapView.getMap()
+                omvMap
                     .moveCamera(
                         GeoPosition(
                             latitude = DEFAULT_LAT,
@@ -119,7 +125,7 @@ class MapActivity : AppCompatActivity() {
                         ), zoom = DEFAULT_ZOOM
                     )
 
-                mapView.getMap().setOnCameraMoveStartedListener(
+                omvMap.setOnCameraMoveStartedListener(
                     object : OmvMap.OnCameraMoveStartedListener {
                         override fun onCameraMoveStarted() {
                             markerImage.animate()
@@ -132,7 +138,7 @@ class MapActivity : AppCompatActivity() {
                     }
                 )
 
-                mapView.getMap().setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
+                omvMap.setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
                     override fun onCameraIdle() {
                         markerImage.animate()
                             .translationY(0f)
@@ -151,35 +157,38 @@ class MapActivity : AppCompatActivity() {
                         )
                     }
                 })
-
-                if (checkLocationPermission()) {
-                    if (locationEnabled) {
-                        mapView.getMap().setMyLocationEnabled(true)
-                    }
-                } else {
-                    locationPermissionLauncher.launch(
-                        arrayOf(
-                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION
-                        )
-                    )
-                }
             }
+
         })
 
-        miniMapView.getMap().getMapAsync(object : OmvMap.OnMapReadyCallback {
-            override fun onMapReady() {
-                miniMapView.getMap()
-                    .moveCamera(
-                        GeoPosition(
-                            latitude = DEFAULT_LAT,
-                            longitude = DEFAULT_LON
-                        ), zoom = DEFAULT_ZOOM
-                    )
-                miniMapView.getMap().showLayerOptions(visible = false)
-                miniMapView.getMap().setMyLocationEnabled(enabled = false)
-                miniMapView.getMap().setMapType(type = OmvMap.MapType.SATELLITE)
+
+        if (checkLocationPermission()) {
+            if (locationEnabled) {
+                mapView.getMap().setMyLocationEnabled(true)
             }
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+
+        miniMapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
+            override fun onMapReady(omvMap: OmvMap) {
+                miniMap = omvMap
+                omvMap.moveCamera(
+                    GeoPosition(
+                        latitude = DEFAULT_LAT,
+                        longitude = DEFAULT_LON
+                    ), zoom = DEFAULT_ZOOM
+                )
+                omvMap.showLayerOptions(visible = false)
+                omvMap.setMyLocationEnabled(enabled = false)
+                omvMap.setMapType(type = OmvMap.MapType.SATELLITE)
+            }
+
         })
     }
 
@@ -225,7 +234,7 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun takeSnapshot() {
-        mapView.getMap().snapShot(callback = object : OmvMap.SnapshotReadyCallback {
+        mainMap.snapShot(callback = object : OmvMap.SnapshotReadyCallback {
             override fun onSnapshotReady(bitmap: Bitmap) {
                 val fragment = SnapshotFragment.newInstance(bitmap)
                 fragment.show(this@MapActivity.supportFragmentManager, SnapshotFragment.TAG)
@@ -235,21 +244,17 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun addMarker() {
-        mapView.getMap().addMarker(
+        mainMap.addMarker(
             OmvMarker(
                 position = GeoPosition(
                     latitude = mapView.getMap().getCenter().latitude,
                     longitude = mapView.getMap().getCenter().longitude
                 ),
-                icon = AppCompatResources.getDrawable(
-                    this@MapActivity,
-                    R.drawable.ic_map_marker
-                ),
                 title = "Test Title"
             )
         )
 
-        miniMapView.getMap().moveCamera(
+        miniMap.moveCamera(
             position = mapView.getMap().getCenter(), zoom = DEFAULT_ZOOM
         )
 
