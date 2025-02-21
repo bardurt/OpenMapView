@@ -234,13 +234,16 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun takeSnapshot() {
-        mainMap.snapShot(callback = object : OmvMap.SnapshotReadyCallback {
-            override fun onSnapshotReady(bitmap: Bitmap) {
-                val fragment = SnapshotFragment.newInstance(bitmap)
-                fragment.show(this@MapActivity.supportFragmentManager, SnapshotFragment.TAG)
+        mainMap.setOnMapLoadedCallback(callback = object : OmvMap.MapLoadedCallback {
+            override fun onMapLoaded() {
+                mainMap.snapShot(callback = object : OmvMap.SnapshotReadyCallback {
+                    override fun onSnapshotReady(bitmap: Bitmap) {
+                        val fragment = SnapshotFragment.newInstance(bitmap)
+                        fragment.show(this@MapActivity.supportFragmentManager, SnapshotFragment.TAG)
+                    }
+                })
             }
         })
-
     }
 
     private fun addMarker() {

@@ -16,6 +16,7 @@ interface OmvMap {
     fun snapShot(callback: SnapshotReadyCallback)
     fun setOnCameraMoveStartedListener(listener: OnCameraMoveStartedListener)
     fun setOnCameraIdleListener(listener: OnCameraIdleListener)
+    fun setOnMapLoadedCallback(callback: MapLoadedCallback)
     fun getCenter(): GeoPosition
     fun setMyLocationEnabled(enabled: Boolean)
     fun showLayerOptions(visible : Boolean)
@@ -25,6 +26,9 @@ interface OmvMap {
         SATELLITE
     }
 
+    interface MapLoadedCallback {
+        fun onMapLoaded()
+    }
 
     interface SnapshotReadyCallback {
         fun onSnapshotReady(bitmap: Bitmap)

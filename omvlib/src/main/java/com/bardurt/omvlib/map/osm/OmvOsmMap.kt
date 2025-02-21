@@ -232,6 +232,12 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         }
     }
 
+    override fun setOnMapLoadedCallback(callback: OmvMap.MapLoadedCallback) {
+        mapView.overlayManager.tilesOverlay.tileStates.runAfters.add(Runnable {
+            callback.onMapLoaded()
+        })
+    }
+
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
