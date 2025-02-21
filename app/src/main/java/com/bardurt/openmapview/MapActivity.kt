@@ -17,8 +17,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import com.bardurt.omvlib.map.core.DebugLogger
 import com.bardurt.omvlib.map.core.GeoPosition
 import com.bardurt.omvlib.map.core.MapProvider
 import com.bardurt.omvlib.map.core.OmvMap
@@ -112,6 +112,7 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun setUpMapView() {
+        mapView.setLogger(DebugLogger)
         mapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
             override fun onMapReady(omvMap: OmvMap) {
                 mainMap = omvMap

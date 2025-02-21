@@ -4,6 +4,8 @@ interface MapProvider {
 
     fun setProviderSource(source: Source)
 
+    fun setLogger(logger: Logger)
+
     fun getMap(): OmvMap
 
     fun getMapAsync(callback: OnMapReadyCallback)

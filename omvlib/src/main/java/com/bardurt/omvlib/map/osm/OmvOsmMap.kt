@@ -5,7 +5,6 @@ import android.content.Context.MODE_PRIVATE
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.location.LocationManager
 import android.media.ThumbnailUtils
 import android.util.AttributeSet
@@ -15,6 +14,7 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import com.bardurt.omvlib.R
 import com.bardurt.omvlib.map.core.GeoPosition
+import com.bardurt.omvlib.map.core.Logger
 import com.bardurt.omvlib.map.core.OmvMap
 import com.bardurt.omvlib.map.core.OmvMarker
 import com.bardurt.omvlib.map.osm.overlay.CameraMoveOverlay
@@ -39,9 +39,11 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     TwoPointerZoomOverlay.Listener {
 
     companion object {
+        private const val TAG = "OsmMap"
         private const val PREFERENCES_NAME = "com.bardurt.openmapview.mapconfig"
     }
 
+    private var logger: Logger? = null
     private var myLocationButton: View
     private var layerButton: View
     private var mapView: MapView
@@ -94,6 +96,10 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         myLocationOverlay.setPersonAnchor(0.5F, 0.5F)
     }
 
+    override fun setLogger(logger: Logger) {
+        this.logger = logger
+    }
+
     override fun resume() {
         mapView.onResume()
     }
@@ -128,9 +134,11 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         osmMarker.position = geoPoint
         osmMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         mapView.overlays.add(osmMarker)
+        logger?.log(Logger.LogLevel.DEBUG, TAG, "Marker added to map")
     }
 
     override fun setMapType(type: OmvMap.MapType) {
+        logger?.log(Logger.LogLevel.DEBUG, TAG, "Setting map type $type")
         mapType = type
         val tileSource = when (type) {
             OmvMap.MapType.NORMAL -> TileSourceFactory.MAPNIK
@@ -149,13 +157,21 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun snapShot(callback: OmvMap.SnapshotReadyCallback) {
+        logger?.log(Logger.LogLevel.DEBUG, TAG, "Creating snapshot")
         val bitmap = if (mapView.width < 1) {
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "View is not laid out, using default size")
             drawToBitmap(mapView, 512, 512)
         } else {
+            logger?.log(
+                Logger.LogLevel.DEBUG,
+                TAG,
+                "View is laid out, using view size w: ${mapView.width}, h: ${mapView.height}"
+            )
             drawToBitmap(mapView, mapView.width, mapView.height)
         }
 
         if (bitmap == null) {
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "Bitmap is null")
             throw IllegalStateException("Unable to draw bitmap")
         }
         callback.onSnapshotReady(bitmap)
@@ -185,7 +201,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
             throw IllegalStateException("Access to location has not been granted!")
         }
 
-        Log.d("OsmMap", "My Location enabled : $enabled")
+        logger?.log(Logger.LogLevel.DEBUG, TAG, "My Location enabled : $enabled")
 
         if (enabled) {
             myLocationButton.visibility = VISIBLE
@@ -233,9 +249,15 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun setOnMapLoadedCallback(callback: OmvMap.MapLoadedCallback) {
-        mapView.overlayManager.tilesOverlay.tileStates.runAfters.add(Runnable {
+        if (mapView.overlayManager.tilesOverlay.tileStates.isDone) {
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map already loaded")
             callback.onMapLoaded()
-        })
+        } else {
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map being loaded, waiting for completion")
+            mapView.overlayManager.tilesOverlay.tileStates.runAfters.add(Runnable {
+                callback.onMapLoaded()
+            })
+        }
     }
 
     private fun hasPermission(context: Context, permission: String): Boolean {
