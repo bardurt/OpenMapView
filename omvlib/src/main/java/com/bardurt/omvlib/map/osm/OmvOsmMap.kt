@@ -26,6 +26,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.MapView.OnFirstLayoutListener
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
@@ -72,6 +73,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
             getContext(),
             getContext().getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE)
         )
+        mapView.setMultiTouchControls(false)
         controller = mapView.controller
 
         moveOverlay = CameraMoveOverlay(this, mapView)
@@ -249,15 +251,20 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     override fun setOnMapLoadedCallback(callback: OmvMap.MapLoadedCallback) {
-        if (mapView.overlayManager.tilesOverlay.tileStates.isDone) {
-            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map already loaded")
+
+        if (mapView.isLayoutOccurred) {
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map loaded!")
             callback.onMapLoaded()
         } else {
-            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map being loaded, waiting for completion")
-            mapView.overlayManager.tilesOverlay.tileStates.runAfters.add(Runnable {
-                callback.onMapLoaded()
-            })
+            logger?.log(Logger.LogLevel.DEBUG, TAG, "Map not loaded, waiting for load!")
+            mapView.addOnFirstLayoutListener { v, left, top, right, bottom ->
+                run {
+                    logger?.log(Logger.LogLevel.DEBUG, TAG, "Map loaded!")
+                    callback.onMapLoaded()
+                }
+            }
         }
+
     }
 
     private fun hasPermission(context: Context, permission: String): Boolean {

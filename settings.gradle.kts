@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "OpenMapView"
 include(":app")
 include(":omvlib")
+include(":osmdroid-android")
