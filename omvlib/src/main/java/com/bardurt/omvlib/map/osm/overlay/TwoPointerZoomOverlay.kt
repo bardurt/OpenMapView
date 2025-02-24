@@ -6,11 +6,11 @@ import org.osmdroid.views.overlay.Overlay
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class TwoPointerZoomOverlay(private val listener: Listener) : Overlay() {
+class TwoPointerZoomOverlay(private val listener: Listener) : org.osmdroid.views.overlay.Overlay() {
 
     private var initialDistance: Float = 0f
 
-    override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
+    override fun onTouchEvent(event: MotionEvent, mapView: org.osmdroid.views.MapView): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_POINTER_DOWN -> {
                 if (event.pointerCount == 2) {

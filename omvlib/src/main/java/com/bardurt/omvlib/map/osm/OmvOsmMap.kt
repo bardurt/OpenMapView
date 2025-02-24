@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory
 import android.location.LocationManager
 import android.media.ThumbnailUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
@@ -26,7 +25,6 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
-import org.osmdroid.views.MapView.OnFirstLayoutListener
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
@@ -69,7 +67,7 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         layerButton = findViewById(R.id.buttonLayers)
 
         mapView.setTileSource(TileSourceFactory.MAPNIK)
-        Configuration.getInstance().load(
+        org.osmdroid.config.Configuration.getInstance().load(
             getContext(),
             getContext().getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE)
         )
@@ -81,14 +79,19 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
         doubleTapAndMoveOverlay = DoubleTapAndMoveOverlay(this)
         mapView.overlays.add(doubleTapAndMoveOverlay)
-        mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+        mapView.zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
 
         twoPointerZoomOverlay = TwoPointerZoomOverlay(this)
         mapView.overlays.add(twoPointerZoomOverlay)
 
-        locationProvider = GpsMyLocationProvider(context)
+        locationProvider =
+            GpsMyLocationProvider(context)
         (locationProvider as GpsMyLocationProvider).addLocationSource(LocationManager.NETWORK_PROVIDER)
-        myLocationOverlay = MyLocationNewOverlay(locationProvider, mapView)
+        myLocationOverlay =
+            MyLocationNewOverlay(
+                locationProvider,
+                mapView
+            )
         myLocationOverlay.enableMyLocation(locationProvider)
 
         val myLocationIcon =
@@ -116,11 +119,19 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
     override fun moveCamera(position: GeoPosition, zoom: Double) {
         controller.setZoom(zoom)
-        controller.setCenter(GeoPoint(position.latitude, position.longitude))
+        controller.setCenter(
+            GeoPoint(
+                position.latitude,
+                position.longitude
+            )
+        )
     }
 
     override fun addMarker(marker: OmvMarker) {
-        val geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude)
+        val geoPoint = GeoPoint(
+            marker.position.latitude,
+            marker.position.longitude
+        )
         val osmMarker = Marker(mapView)
 
         if (marker.icon != null) {

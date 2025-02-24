@@ -262,8 +262,6 @@ class MapActivity : AppCompatActivity() {
             position = mapView.getMap().getCenter(), zoom = DEFAULT_ZOOM
         )
 
-        miniMap.destroy()
-
     }
 
     @Suppress("deprecation")

@@ -11,8 +11,8 @@ import kotlin.math.abs
 
 class CameraMoveOverlay(
     private val onMapMoveListener: OnMapMoveListener,
-    private val mapView: MapView
-) : Overlay() {
+    private val mapView: org.osmdroid.views.MapView
+) : org.osmdroid.views.overlay.Overlay() {
 
     companion object {
         private const val MOVE_THRESHOLD = 10
@@ -21,7 +21,8 @@ class CameraMoveOverlay(
     }
 
     private var isMapMoving: Boolean = false
-    private var lastLatLon: IGeoPoint = GeoPoint(0.0, 0.0)
+    private var lastLatLon: org.osmdroid.api.IGeoPoint =
+        org.osmdroid.util.GeoPoint(0.0, 0.0)
     private val handler = Handler(Looper.getMainLooper())
     private var startX: Float = 0f
     private var startY: Float = 0f
@@ -41,7 +42,7 @@ class CameraMoveOverlay(
         }
     }
 
-    override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
+    override fun onTouchEvent(event: MotionEvent, mapView: org.osmdroid.views.MapView): Boolean {
         super.onTouchEvent(event, mapView)
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
