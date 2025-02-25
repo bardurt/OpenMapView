@@ -23,9 +23,8 @@ import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.CustomZoomButtonsController
-import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -40,15 +39,16 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     companion object {
         private const val TAG = "OsmMap"
         private const val PREFERENCES_NAME = "com.bardurt.openmapview.mapconfig"
+        private const val DEFAULT_ZOOM = 18.0
     }
 
     private var logger: Logger? = null
     private var myLocationButton: View
     private var layerButton: View
-    private var mapView: MapView
+    private var mapView: TouchableMapView
     private var controller: IMapController
     private var cameraMoveStartedListener: OmvMap.OnCameraMoveStartedListener? = null
-    private var moveOverlay: CameraMoveOverlay
+    private var cameraMoveOverlay: CameraMoveOverlay
     private var idleListener: OmvMap.OnCameraIdleListener? = null
 
     private var doubleTapAndMoveOverlay: DoubleTapAndMoveOverlay
@@ -56,32 +56,32 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     private var myLocationOverlay: MyLocationNewOverlay
     private var locationProvider: IMyLocationProvider
     private var mapType = OmvMap.MapType.NORMAL
-
+    private var overlays : MutableList<Overlay> = mutableListOf()
 
     init {
         inflate(context, R.layout.layout_omv_osm_map_view, this)
         mapView = findViewById(R.id.osm_map_view)
+        mapView.zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
         myLocationButton = findViewById(R.id.buttonMyLocation)
         myLocationButton.visibility = GONE
         myLocationButton.setOnClickListener { moveToMyLocation() }
         layerButton = findViewById(R.id.buttonLayers)
 
         mapView.setTileSource(TileSourceFactory.MAPNIK)
-        org.osmdroid.config.Configuration.getInstance().load(
+        Configuration.getInstance().load(
             getContext(),
             getContext().getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE)
         )
         mapView.setMultiTouchControls(false)
         controller = mapView.controller
 
-        moveOverlay = CameraMoveOverlay(this, mapView)
-        mapView.overlays.add(moveOverlay)
+        cameraMoveOverlay = CameraMoveOverlay(this, mapView)
+        mapView.overlays.add(cameraMoveOverlay)
 
         doubleTapAndMoveOverlay = DoubleTapAndMoveOverlay(this)
-        mapView.overlays.add(doubleTapAndMoveOverlay)
-        mapView.zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
-
         twoPointerZoomOverlay = TwoPointerZoomOverlay(this)
+
+        mapView.overlays.add(doubleTapAndMoveOverlay)
         mapView.overlays.add(twoPointerZoomOverlay)
 
         locationProvider =
@@ -99,6 +99,8 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         myLocationOverlay.setPersonIcon(myLocationIcon)
         myLocationOverlay.setDirectionIcon(myLocationIcon)
         myLocationOverlay.setPersonAnchor(0.5F, 0.5F)
+
+        overlays.addAll(mapView.overlays)
     }
 
     override fun setLogger(logger: Logger) {
@@ -163,6 +165,10 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
 
     override fun getMapType(): OmvMap.MapType {
         return mapType
+    }
+
+    override fun setMultiToucheControlsEnabled(enabled: Boolean) {
+        mapView.setUserInteractionEnabled(enabled)
     }
 
     override fun setBuildingsEnabled(enabled: Boolean) {
@@ -286,10 +292,9 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     private fun moveToMyLocation() {
-        controller.animateTo(myLocationOverlay.myLocation)
+        controller.animateTo(myLocationOverlay.myLocation, DEFAULT_ZOOM, 1200)
     }
 
-    @Suppress("Deprecation")
     private fun drawToBitmap(viewToDrawFrom: View, width: Int, height: Int): Bitmap? {
         var newWidth = width
         var newHeight = height
@@ -331,4 +336,5 @@ class OmvOsmMap(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         }
         return result
     }
+
 }

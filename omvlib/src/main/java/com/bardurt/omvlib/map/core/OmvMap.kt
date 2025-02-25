@@ -13,6 +13,7 @@ interface OmvMap {
     fun addMarker(marker: OmvMarker)
     fun setMapType(type: MapType)
     fun getMapType(): MapType
+    fun setMultiToucheControlsEnabled(enabled: Boolean)
     fun setBuildingsEnabled(enabled: Boolean)
     fun snapShot(callback: SnapshotReadyCallback)
     fun setOnCameraMoveStartedListener(listener: OnCameraMoveStartedListener)

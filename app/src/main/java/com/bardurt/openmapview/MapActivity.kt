@@ -34,6 +34,7 @@ class MapActivity : AppCompatActivity() {
         private const val DEFAULT_LAT = 37.386969927816004
         private const val DEFAULT_LON = -121.8824158705871
         private const val DEFAULT_ZOOM = 13.0
+        private const val MINIMAP_ZOOM = 18.0
         const val ANIMATION_DURATION: Int = 250
         val OVERSHOOT_INTERPOLATOR: OvershootInterpolator = OvershootInterpolator()
     }
@@ -116,17 +117,17 @@ class MapActivity : AppCompatActivity() {
         mapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
             override fun onMapReady(omvMap: OmvMap) {
                 mainMap = omvMap
-                omvMap.showLayerOptions(false)
-
-                omvMap
+                mainMap.setMyLocationEnabled(true)
+                mainMap.setMultiToucheControlsEnabled(true)
+                mainMap.showLayerOptions(false)
+                mainMap
                     .moveCamera(
                         GeoPosition(
                             latitude = DEFAULT_LAT,
                             longitude = DEFAULT_LON
                         ), zoom = DEFAULT_ZOOM
                     )
-
-                omvMap.setOnCameraMoveStartedListener(
+                mainMap.setOnCameraMoveStartedListener(
                     object : OmvMap.OnCameraMoveStartedListener {
                         override fun onCameraMoveStarted() {
                             markerImage.animate()
@@ -139,7 +140,7 @@ class MapActivity : AppCompatActivity() {
                     }
                 )
 
-                omvMap.setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
+                mainMap.setOnCameraIdleListener(object : OmvMap.OnCameraIdleListener {
                     override fun onCameraIdle() {
                         markerImage.animate()
                             .translationY(0f)
@@ -179,15 +180,15 @@ class MapActivity : AppCompatActivity() {
         miniMapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
             override fun onMapReady(omvMap: OmvMap) {
                 miniMap = omvMap
-                omvMap.moveCamera(
+                miniMap.setMultiToucheControlsEnabled(enabled = false)
+                miniMap.moveCamera(
                     GeoPosition(
                         latitude = DEFAULT_LAT,
                         longitude = DEFAULT_LON
-                    ), zoom = DEFAULT_ZOOM
+                    ), zoom = MINIMAP_ZOOM
                 )
-                omvMap.showLayerOptions(visible = false)
-                omvMap.setMyLocationEnabled(enabled = false)
-                omvMap.setMapType(type = OmvMap.MapType.SATELLITE)
+                miniMap.showLayerOptions(visible = false)
+                miniMap.setMyLocationEnabled(enabled = false)
             }
 
         })
@@ -259,7 +260,7 @@ class MapActivity : AppCompatActivity() {
         )
 
         miniMap.moveCamera(
-            position = mapView.getMap().getCenter(), zoom = DEFAULT_ZOOM
+            position = mapView.getMap().getCenter(), zoom = MINIMAP_ZOOM
         )
 
     }

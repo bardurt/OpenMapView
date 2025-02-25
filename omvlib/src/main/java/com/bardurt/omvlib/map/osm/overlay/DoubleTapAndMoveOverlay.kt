@@ -9,7 +9,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
 import kotlin.math.abs
 
-class DoubleTapAndMoveOverlay(private val listener: Listener) : org.osmdroid.views.overlay.Overlay() {
+class DoubleTapAndMoveOverlay(private val listener: Listener) : Overlay() {
 
     companion object {
         private const val DOUBLE_TAP_THRESHOLD = 200
@@ -23,7 +23,7 @@ class DoubleTapAndMoveOverlay(private val listener: Listener) : org.osmdroid.vie
     private var heightSet = false
 
 
-    override fun draw(pCanvas: Canvas?, pMapView: org.osmdroid.views.MapView?, pShadow: Boolean) {
+    override fun draw(pCanvas: Canvas?, pMapView: MapView?, pShadow: Boolean) {
         super.draw(pCanvas, pMapView, pShadow)
 
         if (!heightSet) {
@@ -34,7 +34,7 @@ class DoubleTapAndMoveOverlay(private val listener: Listener) : org.osmdroid.vie
         }
     }
 
-    override fun onTouchEvent(event: MotionEvent, mapView: org.osmdroid.views.MapView): Boolean {
+    override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 val currentTime = SystemClock.uptimeMillis()

@@ -19,7 +19,7 @@ class OmvMapView(context: Context, attrs: AttributeSet?) : LinearLayout(context,
     private var logger: Logger? = null
 
     init {
-        inflate(context, R.layout.layout_omv_map_view, this)
+        inflate(context, R.layout.layout_omv_map_provider_view, this)
         container = findViewById(R.id.container)
         omvMap = OmvOsmMap(context, attrs)
         container.addView(omvMap as OmvOsmMap)

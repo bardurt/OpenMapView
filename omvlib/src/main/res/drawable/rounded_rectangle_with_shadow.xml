@@ -4,7 +4,7 @@
         android:left="@dimen/shadow_offset"
         android:top="@dimen/shadow_offset">
         <shape android:shape="rectangle">
-            <solid android:color="@color/black_alpha_50" />
+            <solid android:color="@color/black_alpha_25" />
             <corners android:radius="7dp" />
         </shape>
     </item>
