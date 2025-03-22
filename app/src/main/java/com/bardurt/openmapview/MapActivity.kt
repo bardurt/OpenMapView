@@ -26,6 +26,7 @@ import com.bardurt.omvlib.map.core.OmvMapView
 import com.bardurt.omvlib.map.core.OmvMarker
 import java.util.Locale
 import java.util.concurrent.Executors
+import androidx.core.view.isVisible
 
 
 class MapActivity : AppCompatActivity() {
@@ -59,13 +60,11 @@ class MapActivity : AppCompatActivity() {
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
             val fineLocationGranted =
-                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
             val coarseLocationGranted =
-                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+                result[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
             if (fineLocationGranted || coarseLocationGranted) {
-                if (locationEnabled) {
-                    mapView.getMap().setMyLocationEnabled(true)
-                }
+                setUpMapView()
             } else {
                 Toast.makeText(
                     this,
@@ -91,14 +90,25 @@ class MapActivity : AppCompatActivity() {
         buttonAddMarker.setOnClickListener { addMarker() }
         buttonMiniMap = findViewById(R.id.buttonMiniMap)
         buttonMiniMap.setOnClickListener {
-            if (miniMapView.visibility == View.VISIBLE) {
+            if (miniMapView.isVisible) {
                 miniMapView.visibility = View.GONE
             } else {
                 miniMapView.visibility = View.VISIBLE
             }
         }
-        setUpMapView()
 
+
+
+        if (checkLocationPermission()) {
+            setUpMapView()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
     }
 
     private fun checkLocationPermission(): Boolean {
@@ -164,18 +174,7 @@ class MapActivity : AppCompatActivity() {
         })
 
 
-        if (checkLocationPermission()) {
-            if (locationEnabled) {
-                mapView.getMap().setMyLocationEnabled(true)
-            }
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
+
 
         miniMapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
             override fun onMapReady(omvMap: OmvMap) {
