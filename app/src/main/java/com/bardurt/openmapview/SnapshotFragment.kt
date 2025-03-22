@@ -1,6 +1,7 @@
 package com.bardurt.openmapview
 
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,14 +12,18 @@ import androidx.fragment.app.DialogFragment
 
 class SnapshotFragment : DialogFragment() {
 
-
     private lateinit var imageView: ImageView
     private lateinit var bitmap: Bitmap
 
+    @Suppress("deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            bitmap = it.getParcelable(ARGUMENT_BITMAP)!!
+            bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it.getParcelable(ARGUMENT_BITMAP, Bitmap::class.java)!!
+            } else {
+                it.getParcelable(ARGUMENT_BITMAP)!!
+            }
         }
     }
 
