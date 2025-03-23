@@ -41,17 +41,14 @@ class MapActivity : AppCompatActivity() {
     }
 
     private lateinit var mapView: OmvMapView
-    private lateinit var miniMapView: OmvMapView
 
     private lateinit var mainMap: OmvMap
-    private lateinit var miniMap: OmvMap
 
     private lateinit var markerImage: View
     private lateinit var geocoder: Geocoder
     private lateinit var addressView: TextView
     private lateinit var buttonSnapshot: View
     private lateinit var buttonAddMarker: View
-    private lateinit var buttonMiniMap: View
     private val handler = Handler(Looper.getMainLooper())
     private var locationEnabled: Boolean = false
 
@@ -81,23 +78,12 @@ class MapActivity : AppCompatActivity() {
 
         markerImage = findViewById(R.id.marker_image_view)
         mapView = findViewById(R.id.mapView)
-        miniMapView = findViewById(R.id.mapViewMini)
         addressView = findViewById(R.id.tv_address)
         geocoder = Geocoder(this, Locale.getDefault())
         buttonSnapshot = findViewById(R.id.buttonSnapshot)
         buttonSnapshot.setOnClickListener { takeSnapshot() }
         buttonAddMarker = findViewById(R.id.buttonAddMarker)
         buttonAddMarker.setOnClickListener { addMarker() }
-        buttonMiniMap = findViewById(R.id.buttonMiniMap)
-        buttonMiniMap.setOnClickListener {
-            if (miniMapView.isVisible) {
-                miniMapView.visibility = View.GONE
-            } else {
-                miniMapView.visibility = View.VISIBLE
-            }
-        }
-
-
 
         if (checkLocationPermission()) {
             setUpMapView()
@@ -172,25 +158,6 @@ class MapActivity : AppCompatActivity() {
             }
 
         })
-
-
-
-
-        miniMapView.getMapAsync(object : MapProvider.OnMapReadyCallback {
-            override fun onMapReady(omvMap: OmvMap) {
-                miniMap = omvMap
-                miniMap.setMultiToucheControlsEnabled(enabled = false)
-                miniMap.moveCamera(
-                    GeoPosition(
-                        latitude = DEFAULT_LAT,
-                        longitude = DEFAULT_LON
-                    ), zoom = MINIMAP_ZOOM
-                )
-                miniMap.showLayerOptions(visible = false)
-                miniMap.setMyLocationEnabled(enabled = false)
-            }
-
-        })
     }
 
     @Suppress("deprecation")
@@ -257,11 +224,6 @@ class MapActivity : AppCompatActivity() {
                 title = "Test Title"
             )
         )
-
-        miniMap.moveCamera(
-            position = mapView.getMap().getCenter(), zoom = MINIMAP_ZOOM
-        )
-
     }
 
     @Suppress("deprecation")
@@ -281,6 +243,5 @@ class MapActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mainMap.destroy()
-        miniMap.destroy()
     }
 }
